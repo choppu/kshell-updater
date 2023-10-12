@@ -1,0 +1,42 @@
+{
+  "name": "kpro-updater",
+  "version": "1.0.0",
+  "description": "Keycard Pro Updater App",
+  "main": "./out/app.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && electron ./out/app.js --trace-warnings",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "appId": "com.github.choppu.kpro-updater",
+    "productName": "Keycard Pro Updater",
+    "publish": false,
+    "files": [
+      "**/*",
+      "!tsconfig.json",
+      "!README.md",
+      "!src"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": "zip"
+    }
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "kprojs": "file:../kprojs",
+    "kprojs-node-hid": "file:../kprojs-node-hid",
+    "markdown-it": "^13.0.2",
+    "node-fetch": "^2.7.0",
+    "typescript": "^5.2.2"
+  },
+  "devDependencies": {
+    "@types/node-hid": "^1.3.2",
+    "electron": "^26.2.4",
+    "electron-builder": "^24.6.4"
+  }
+}

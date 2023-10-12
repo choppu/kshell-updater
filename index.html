@@ -1,0 +1,51 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Keycard Pro Firmware Updater</title>
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+  <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
+  <link rel="stylesheet" type="text/css" href="css/app.css">
+</head>
+
+<body class="kpro__main-container">
+  <div class="kpro__img-container">
+    <img src="./img/update-fw.png" alt="Firmware" class="kpro__img">
+  </div>
+  <div class="kpro__btns-container group">
+    <div class="kpro__fw-container">
+      <button class="kpro__btn" id="btn-fw-update" disabled>
+        <span class="kpro__btn-label">Update Firmware</span>
+      </button>
+      <div class="kpro__fw-changelog-container">
+        <span class="kpro__version" id="kpro__fw-version"></span>
+        <button class="kpro__fw-changelog" id="btn-fw-changelog">Release notes</button>
+      </div>
+    </div>
+    <div class="kpro__db-container">
+      <button class="kpro__btn" id="btn-erc20-update" disabled>
+        <span class="kpro__btn-label">Update ERC20 DB</span>
+      </button>
+      <div class="kpro__db-version-container">
+        <span class="kpro__version" id="kpro__db-version"></span>
+      </div>
+    </div>
+  </div>
+  <div id="update-progress" class="kpro__load-progress-bar-container kpro__display-none">
+    <progress id="progress-bar" value="0"></progress>
+  </div>
+  <div class="kpro__label-container" id="fw-update-label">
+    <h1 class="kpro__heading">Connect your Keycard Pro device to download the latest version of Keycard Pro firmware / ERC20 database</h1>
+  </div>
+  <div class="kpro__message-log-container">
+    <div id="kpro-message-field" class="kpro__message kpro__display-none">
+      <span id="kpro-message"></span>
+      <button id="kpro-message-close" class="kpro-message-close">x</button>
+    </div>
+  </div>
+</body>
+<script>
+  require('./out/renderer.js');
+</script>
+
+</html>
