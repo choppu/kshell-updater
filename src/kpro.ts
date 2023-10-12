@@ -115,13 +115,13 @@ export class KPro {
       try {
         let { erc20Version } = await this.appEth.getAppConfiguration();
 
-       // if (erc20Version == this.db_context?.version) {
-        // this.window.send("no-db-update-needed");
-        //} else {
+        if (erc20Version == this.db_context?.version) {
+         this.window.send("no-db-update-needed");
+        } else {
           this.window.send("updating-db");
           await this.appEth.loadERC20DB(this.db as ArrayBuffer);
           this.window.send("db-updated");
-        //}
+        }
       } catch (err) {
         console.log(err);
         throw("Error: Failed to update the ERC20 database");
