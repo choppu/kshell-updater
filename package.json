@@ -28,8 +28,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "kprojs": "file:../kprojs",
-    "kprojs-node-hid": "file:../kprojs-node-hid",
+    "kprojs": "github:choppu/kprojs",
+    "kprojs-node-hid": "github:choppu/kprojs-node-hid",
     "markdown-it": "^13.0.2",
     "node-fetch": "^2.7.0",
     "typescript": "^5.2.2"

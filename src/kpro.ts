@@ -2,6 +2,7 @@ import { IpcMainEvent, WebContents, ipcMain } from "electron";
 import KProJS from "kprojs";
 import KProJSNodeHID from "kprojs-node-hid";
 import TransportNodeHidSingleton from "kprojs-node-hid/lib/transport-node-hid";
+import { StatusCodes } from "kprojs/lib/errors";
 import Eth from "kprojs/lib/eth";
 
 const fetch = require("node-fetch");
@@ -86,7 +87,7 @@ export class KPro {
   async updateFirmware() : Promise<void> {
     this.window.send("disable-db-update");
     this.fw = await fetch(folderPath + this.firmware_context?.fw_path).then((r: any) => r.arrayBuffer());
-    this.window.send("firmware-length", this.fw?.byteLength);
+    this.window.send("initialize-update", this.fw?.byteLength);
 
     if(this.appEth) {
       try {
@@ -99,9 +100,12 @@ export class KPro {
           await this.appEth.loadFirmware(this.fw as ArrayBuffer);
           this.window.send("firmware-updated");
         }
-      } catch (err) {
-        console.log(err);
-        throw("Error: Failed to update the firmware");
+      } catch (err: any) {
+        if(err.statusCode == StatusCodes.SECURITY_STATUS_NOT_SATISFIED) {
+          throw("Firmware update canceled by user");
+        } else {
+          throw("Error: Invalid data. Failed to update firmware");
+        }
       }
     }
   }
@@ -109,7 +113,7 @@ export class KPro {
   async updateERC20() : Promise<void> {
     this.window.send("disable-fw-update");
     this.db = await fetch(folderPath + this.db_context?.db_path).then((r: any) => r.arrayBuffer());
-    this.window.send("db-length", this.db?.byteLength);
+    this.window.send("initialize-update", this.db?.byteLength);
 
     if(this.appEth) {
       try {
@@ -122,9 +126,12 @@ export class KPro {
           await this.appEth.loadERC20DB(this.db as ArrayBuffer);
           this.window.send("db-updated");
         }
-      } catch (err) {
-        console.log(err);
-        throw("Error: Failed to update the ERC20 database");
+      } catch (err: any) {
+        if(err.statusCode == StatusCodes.SECURITY_STATUS_NOT_SATISFIED) {
+          throw("ERC20 database update canceled by user");
+        } else {
+          throw("Error: Invalid data. Failed to update the ERC20 database");
+        }
       }
     }
   }

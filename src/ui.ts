@@ -1,7 +1,6 @@
 const fs = require('fs');
 
 export namespace UI {
-  const mainContainer = document.getElementById("main-container");
   const updateFWBtn = document.getElementById("btn-fw-update") as HTMLButtonElement;
   const updateDBBtn = document.getElementById("btn-erc20-update") as HTMLButtonElement;
   const fwUpdateLabel = document.getElementById("fw-update-label");
@@ -12,26 +11,35 @@ export namespace UI {
   const dbVersion = document.getElementById('kpro__db-version') as HTMLSpanElement;
   const fwVersion = document.getElementById('kpro__fw-version') as HTMLSpanElement;
 
-  export function setPBarMaxLength(l: number) : void {
-    fwLoad.max = l;
-  }
+  let pBarProgress: number;
 
   export function setVersion(db_v: number, fw_v: string) : void {
     dbVersion.innerHTML = "DB version " + db_v.toString();
     fwVersion.innerHTML = "Version " + fw_v + " | ";
   }
 
-  export function handleLoadProgress(pBar: number, progress: number) : {progressBar: number, finished: boolean} {
-    let finished: boolean;
-    if (pBar >= fwLoad.max) {
-      finished = true;
-    } else {
-      pBar += progress;
-      fwLoad.value = pBar;
-      finished = false;
+  export function enableProgressBar() : void {
+    progressBar.classList.remove("kpro__display-none");
+  }
+
+  export function disableProgressBar() : void {
+    progressBar.classList.add("kpro__display-none");
+  }
+
+  export function initializeProgressBar(l: number) : void {
+    fwLoad.max = l;
+    fwLoad.value = 0;
+    pBarProgress = 0;
+  }
+
+  export function handleLoadProgress(progress: number) : boolean {
+    if (pBarProgress < fwLoad.max) {
+      pBarProgress += progress;
+      fwLoad.value = pBarProgress;
+      return false;
     }
 
-    return { progressBar: pBar, finished: finished }
+    return true;
   }
 
   export function updateStatusMessage(mess: string): void {
@@ -53,15 +61,6 @@ export namespace UI {
       updateFWBtn.disabled = false;
       updateDBBtn.disabled = true;
     }
-  }
-
-  export function enableProgressBar() : void {
-    progressBar.classList.remove("kpro__display-none");
-  }
-
-  export function disableProgressBar() : void {
-    progressBar.classList.add("kpro__display-none");
-    fwLoad.value = 0;
   }
 
   export function handleChangelog(win: Window, data: string) {
