@@ -3,6 +3,8 @@ const fs = require('fs');
 export namespace UI {
   const updateFWBtn = document.getElementById("btn-fw-update") as HTMLButtonElement;
   const updateDBBtn = document.getElementById("btn-erc20-update") as HTMLButtonElement;
+  const updateFWBtnLocal = document.getElementById("fw-upload-local") as HTMLButtonElement;
+  const updateDBBtnLocal = document.getElementById("erc20-upload-local") as HTMLButtonElement;
   const fwUpdateLabel = document.getElementById("fw-update-label");
   const progressBar = document.getElementById("update-progress") as HTMLDivElement;
   const fwLoad = document.getElementById("progress-bar") as HTMLProgressElement;
@@ -56,10 +58,14 @@ export namespace UI {
       fwUpdateLabel?.classList.add("kpro__display-none");
       updateFWBtn.disabled = false;
       updateDBBtn.disabled = false;
+      updateFWBtnLocal.disabled = false;
+      updateDBBtnLocal.disabled = false;
     } else {
       fwUpdateLabel?.classList.remove("kpro__display-none");
-      updateFWBtn.disabled = false;
+      updateFWBtn.disabled = true;
       updateDBBtn.disabled = true;
+      updateFWBtnLocal.disabled = true;
+      updateDBBtnLocal.disabled = true;
     }
   }
 
@@ -67,5 +73,4 @@ export namespace UI {
     win.document.write(data);
     win.document.write('<link rel="stylesheet" type="text/css" href="css/modal.css">');
   }
-
 }

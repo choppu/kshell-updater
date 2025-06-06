@@ -5,7 +5,7 @@ body {
   font-size: .95em;
   color: rgb(55, 55, 55);
   line-height: 1.4em;
-  font-family: 'Chivo Mono', monospace;
+  font-family: 'Inter Mono', monospace;
   font-weight: 300;
   overflow-y: scroll;
 }

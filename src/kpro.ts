@@ -4,21 +4,21 @@ import KProJSNodeHID from "kprojs-node-hid";
 import TransportNodeHidSingleton from "kprojs-node-hid/lib/transport-node-hid";
 import { StatusCodes } from "kprojs/lib/errors";
 import Eth from "kprojs/lib/eth";
+import fetch from 'node-fetch';
 
-const fetch = require("node-fetch");
 const MarkdownIt = require('markdown-it');
 
 
-const fwContextPath = "https://172.16.80.18:8000/firmware/context";
-const dbContextPath = "https://172.16.80.18:8000/context";
-const folderPath = "https://172.16.80.18:8000/uploads/";
+const fwContextPath = "https://shell.keycard.tech/firmware/context";
+const dbContextPath = "https://shell.keycard.tech/db/context";
+const folderPath = "https://shell.keycard.tech/uploads/";
 
 export class KPro {
   window: WebContents;
   transport?: TransportNodeHidSingleton | null;
   appEth?: Eth | null;
-  firmware_context?: {fw_path: string, changelog_path: string, version: string};
-  db_context?: {db_path: string, version: number}
+  firmware_context?: { fw_path: string, changelog_path: string, version: string };
+  db_context?: { db_path: string, version: number }
   fw?: ArrayBuffer;
   db?: ArrayBuffer;
   changelog?: string;
@@ -30,122 +30,137 @@ export class KPro {
     this.installEventHandlers();
   }
 
-  async start() : Promise<void> {
+  async start(): Promise<void> {
     try {
       this.firmware_context = await fetch(fwContextPath).then((r: any) => r.json());
       this.db_context = await fetch(dbContextPath).then((r: any) => r.json());
       this.window.send("set-version", this.db_context?.version, this.firmware_context?.version);
-    } catch(err) {
-      throw(err)
+    } catch (err) {
+      throw (err)
     }
 
     KProJSNodeHID.TransportNodeHid.default.listen({
       next: async (e) => {
         if (e.type === 'add') {
           this.deviceFound = true;
-          this.transport = await this.connect();
-          this.appEth = await new KProJS.Eth(this.transport);
           this.window.send("kpro-connected", this.deviceFound);
         } else if (e.type === 'remove') {
-          this.stop();
           this.deviceFound = false;
           this.window.send("kpro-disconnected", this.deviceFound);
-          this.transport = null;
-          this.appEth = null;
         }
       },
       error: (error) => {
         if (error instanceof KProJS.KProError.TransportOpenUserCancelled) {
-          throw("Error connecting to device. Connect Keycard Pro");
+          throw ("Error connecting to device. Connect Keycard Shell");
         } else {
-          throw("Error");
+          throw ("Error");
         }
       },
-      complete: () => {}
+      complete: () => { }
     });
   }
 
-  stop() : void {
-    if(this.transport) {
+  async connect(): Promise<TransportNodeHidSingleton> {
+    return KProJSNodeHID.TransportNodeHid.default.open()
+      .then(transport => {
+        transport.on("chunk-loaded", (progress: any) => {
+          this.window.send("chunk-loaded", progress);
+        });
+        return transport;
+      }).catch((err: any) => {
+        console.warn(err);
+        return new Promise(s => setTimeout(s, 1000)).then(() => this.connect());
+      });
+  }
+
+  async updateFirmware(fw?: ArrayBuffer): Promise<void> {
+    let localUpdate = false;
+
+    if (fw) {
+      this.fw = fw;
+      this.window.send("fw-local-update-start");
+      localUpdate = true;
+    } else {
+      this.fw = await fetch(folderPath + this.firmware_context?.fw_path).then((r: any) => r.arrayBuffer());
+      this.window.send("fw-online-update-start");
+    }
+    this.window.send("initialize-update", this.fw?.byteLength);
+
+    if (this.deviceFound) {
+      this.transport = await this.connect();
+      this.appEth = await new KProJS.Eth(this.transport);
+
+      try {
+        let { fwVersion } = await this.appEth.getAppConfiguration();
+
+        if (fwVersion == this.firmware_context?.version && !localUpdate) {
+          this.window.send("no-fw-update-needed");
+        } else {
+          this.window.send("updating-firmware");
+          await this.appEth.loadFirmware(this.fw as ArrayBuffer);
+          this.window.send("firmware-updated", localUpdate);
+        }
+      } catch (err: any) {
+        if (err.statusCode == StatusCodes.SECURITY_STATUS_NOT_SATISFIED) {
+          this.window.send("update-error", "Firmware update canceled by user");
+        } else {
+          this.window.send("update-error", "Error: Invalid data. Failed to update firmware");
+        }
+      }
+
       this.transport.close();
     }
   }
 
-  async connect() : Promise<TransportNodeHidSingleton> {
-    return KProJSNodeHID.TransportNodeHid.default.open()
-    .then(transport => {
-      transport.on("chunk-loaded", (progress: any) => {
-        this.window.send("chunk-loaded", progress);
-      });
-      return transport;
-    }).catch((err: any) => {
-      console.warn(err);
-      return new Promise(s => setTimeout(s, 1000)).then(() => this.connect());
-    });
-  }
-
-  async updateFirmware() : Promise<void> {
-    this.window.send("disable-db-update");
-    this.fw = await fetch(folderPath + this.firmware_context?.fw_path).then((r: any) => r.arrayBuffer());
-    this.window.send("initialize-update", this.fw?.byteLength);
-
-    if(this.appEth) {
-      try {
-        let { fwVersion } = await this.appEth.getAppConfiguration();
-
-        if (fwVersion == this.firmware_context?.version) {
-         this.window.send("no-fw-update-needed");
-        } else {
-          this.window.send("updating-firmware");
-          await this.appEth.loadFirmware(this.fw as ArrayBuffer);
-          this.window.send("firmware-updated");
-        }
-      } catch (err: any) {
-        if(err.statusCode == StatusCodes.SECURITY_STATUS_NOT_SATISFIED) {
-          throw("Firmware update canceled by user");
-        } else {
-          throw("Error: Invalid data. Failed to update firmware");
-        }
-      }
+  async updateERC20(db?: ArrayBuffer): Promise<void> {
+    let localUpdate = false;
+    if (db) {
+      this.db = db;
+      this.window.send("db-local-update-start");
+      localUpdate = true;
+    } else {
+      this.db = await fetch(folderPath + this.db_context?.db_path).then((r: any) => r.arrayBuffer());
+      this.window.send("db-online-update-start");
     }
-  }
 
-  async updateERC20() : Promise<void> {
-    this.window.send("disable-fw-update");
-    this.db = await fetch(folderPath + this.db_context?.db_path).then((r: any) => r.arrayBuffer());
     this.window.send("initialize-update", this.db?.byteLength);
 
-    if(this.appEth) {
+    if (this.deviceFound) {
+      this.transport = await this.connect();
+      this.appEth = await new KProJS.Eth(this.transport);
+
       try {
         let { erc20Version } = await this.appEth.getAppConfiguration();
 
         if (erc20Version == this.db_context?.version) {
-         this.window.send("no-db-update-needed");
+          this.window.send("no-db-update-needed");
         } else {
           this.window.send("updating-db");
           await this.appEth.loadERC20DB(this.db as ArrayBuffer);
-          this.window.send("db-updated");
+          this.window.send("db-updated", localUpdate);
         }
       } catch (err: any) {
-        if(err.statusCode == StatusCodes.SECURITY_STATUS_NOT_SATISFIED) {
-          throw("ERC20 database update canceled by user");
+        if (err.statusCode == StatusCodes.SECURITY_STATUS_NOT_SATISFIED) {
+          this.window.send("update-error", "ERC20 database update canceled by user");
         } else {
-          throw("Error: Invalid data. Failed to update the ERC20 database");
+          this.window.send("update-error", "Error: Invalid data. Failed to update the ERC20 database");
         }
       }
+
+      this.transport.close();
     }
   }
 
-  async getChangelog() : Promise<void> {
+  async getChangelog(): Promise<void> {
     let md = new MarkdownIt();
     this.changelog = await fetch(folderPath + this.firmware_context?.changelog_path).then((r: any) => r.text());
-    if(this.changelog) {
+    if (this.changelog) {
       this.window.send("changelog", md.render(this.changelog), this.firmware_context?.version);
     }
   }
 
-  transportStopListening() : void {
-    this.transport?.off("chunk-loaded", () => {});
+  transportStopListening(): void {
+    this.transport?.off("chunk-loaded", () => { });
   }
 
   withErrorHandler(fn: (...args: any) => Promise<void>): (ev: IpcMainEvent) => void {

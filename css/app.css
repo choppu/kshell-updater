@@ -2,7 +2,7 @@
    v2.0 | 20110126
    License: none (public domain)
 */
-@import url('https://fonts.googleapis.com/css2?family=Chivo+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;1,100;1,200;1,300;1,400;1,500;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
@@ -32,9 +32,8 @@ footer, header, hgroup, menu, nav, section {
 body {
   font-size: 62.5%;
   font-size: 1em;
-  color: rgb(55, 55, 55);
   line-height: 1.3em;
-  font-family: 'Chivo Mono', monospace;
+  font-family: 'Inter', monospace;
   font-weight: 300;
   background: rgb(15, 17, 22);
   overflow-y: hidden;
@@ -127,13 +126,13 @@ input[type=number] {
 }
 
 .kpro__btns-container {
-  width: 90%;
+  width: 100%;
   margin: 1em auto;
 }
 
 .kpro__label-container {
   width: 85%;
-  margin: 2em auto 1em auto;
+  margin: 3em auto 1em auto;
   text-align: center;
   font-size: .9em;
   font-weight: 100;
@@ -143,7 +142,7 @@ input[type=number] {
   float: right;
   text-align: center;
   width: 50%;
-  padding: 2em 0;
+  padding: 0;
   box-sizing: border-box;
 }
 
@@ -151,33 +150,33 @@ input[type=number] {
   float: left;
   text-align: center;
   width: 50%;
-  padding: 2em 0;
+  padding: 0;
   border-right: solid 1px white;
   box-sizing: border-box;
 }
 
 .kpro__btn {
-  text-align: center;
-  width: 170px;
-  font-family: 'Chivo Mono', monospace;
-  background: white;
-  padding: .5em 1em;
-  color: rgb(15, 17, 22);
+  font-family: 'Inter', monospace;
+  background: none;
+  padding: .1em 0;
+  color: #FF6400;
   border: none;
-  border-radius: 2px;
-  text-transform: uppercase;
+  border-bottom: 1px solid #FF6400;
   box-shadow: 0 3px 3px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  font-size: .85em;
   font-weight: 500;
   outline: none;
+  margin: .4em .5em;
 }
 
 .kpro__btn:disabled,
 .kpro__btn[disabled] {
-  background: rgb(180, 180, 180);
+  color: #FF6400aa;
+  border-bottom: 1px solid #FF6400aa;
 }
 
 .kpro__img-container {
-  width: 90%;
+  width: 95%;
   margin: .5em auto;
 }
 
@@ -250,9 +249,8 @@ progress::-moz-progress-value {
 .kpro__fw-changelog, .kpro__version {
   background: none;
   border: none;
-  font-family: 'Chivo Mono', monospace;
+  font-family: 'Inter', monospace;
   color: white;
-  margin-top: .6em;
   font-weight: 200;
   font-size: .75em;
   outline: none;
@@ -262,16 +260,30 @@ progress::-moz-progress-value {
 }
 
 .kpro__version {
-  margin-top: .5em;
   display: inline-block;
   border-bottom: none;
 }
 
 .kpro__modal-body {
   background: red;
-  font-family: 'Chivo Mono', monospace;
+  font-family: 'Inter', monospace;
 }
 
 .kpro__display-none {
   display: none;
+}
+
+.kpro__fw-local-update, .kpro__fw-online-update, .kpro__erc20-local-update, .kpro__erc20-online-update {
+    display: inline-block;
+}
+
+.kpro__heading {
+    font-size: 1.1em;
+    font-weight: 700;
+    padding: .5em 0 .8em 0;
+}
+
+.kpro__or {
+    font-weight: 600;
+    font-size: .85em;
 }

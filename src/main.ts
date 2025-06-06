@@ -11,13 +11,12 @@ export namespace Main {
   }
 
   export function onClose(): void {
-    kpro.stop();
     mainWindow.destroy();
   }
 
   export function onReady(): void {
     mainWindow = new BrowserWindow({
-      width: 800, height: 600, minWidth: 800, minHeight: 650, maximizable: false, webPreferences: {
+      width: 750, height: 570, minWidth: 750, minHeight: 570, maximizable: false, webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
         enableRemoteModule: true,
@@ -29,14 +28,14 @@ export namespace Main {
     mainWindow.webContents.once("dom-ready", async () => {
       await kpro.start();
     });
-    //mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
     mainWindow.on('closed', Main.onClose);
   }
 
   export function main(app: Electron.App, browserWindow: typeof BrowserWindow): void {
     BrowserWindow = browserWindow;
     application = app;
-    application.setName("Keycard Pro Updater");
+    application.setName("Keycard Shell Updater");
     application.on('window-all-closed', Main.onWindowAllClosed);
     application.on('ready', Main.onReady);
   }

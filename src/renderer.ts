@@ -1,8 +1,10 @@
 import { UI } from "./ui";
 const { ipcRenderer } = require('electron');
 
-const fwUpdateBtn = document.getElementById("btn-fw-update") as HTMLButtonElement;
-const dbUpdateBtn = document.getElementById("btn-erc20-update") as HTMLButtonElement;
+const fwUpdateOnlineBtn = document.getElementById("btn-fw-update") as HTMLButtonElement;
+const dbUpdateOnlineBtn = document.getElementById("btn-erc20-update") as HTMLButtonElement;
+const fwUpdateLocalBtn = document.getElementById("fw-upload-local") as HTMLButtonElement;
+const dbUpdateLocalBtn = document.getElementById("erc20-upload-local") as HTMLButtonElement;
 
 export function handleLog(event: string, msg: string): void {
   ipcRenderer.on(event, (_ : any) => {
@@ -21,8 +23,10 @@ export function handleUpdateProgress(event: string) : void {
 }
 
 export function enableUpdateBtns() : void {
-  fwUpdateBtn.disabled = false;
-  dbUpdateBtn.disabled = false;
+  fwUpdateOnlineBtn.disabled = false;
+  dbUpdateOnlineBtn.disabled = false;
+  fwUpdateLocalBtn.disabled = false;
+  dbUpdateLocalBtn.disabled = false;
 }
 
 ipcRenderer.on("kpro-connected", (_ : any, connected: boolean) => {
@@ -43,12 +47,18 @@ ipcRenderer.on("initialize-update", (_: any, length: number) => {
 });
 
 ipcRenderer.on("no-fw-update-needed", () => {
-  dbUpdateBtn.disabled = false;
+  dbUpdateOnlineBtn.disabled = false;
+  dbUpdateLocalBtn.disabled = false;
+  fwUpdateLocalBtn.disabled = false;
+  fwUpdateOnlineBtn.disabled = false;
   UI.updateStatusMessage("Your firmware is up-to-date");
 });
 
 ipcRenderer.on("no-db-update-needed", () => {
-  fwUpdateBtn.disabled = false;
+  dbUpdateOnlineBtn.disabled = false;
+  dbUpdateLocalBtn.disabled = false;
+  fwUpdateLocalBtn.disabled = false;
+  fwUpdateOnlineBtn.disabled = false;
   UI.updateStatusMessage("Your ERC20 database is up-to-date");
 });
 
@@ -56,9 +66,11 @@ ipcRenderer.on("updating-firmware", () => {
   UI.enableProgressBar();
 });
 
-ipcRenderer.on("firmware-updated", () => {
+ipcRenderer.on("firmware-updated", (_: any, localUpdate: boolean) => {
   UI.disableProgressBar();
-  dbUpdateBtn.disabled = false;
+  localUpdate ? (fwUpdateOnlineBtn.disabled = false) : (fwUpdateLocalBtn.disabled = false);
+  dbUpdateOnlineBtn.disabled = false;
+  dbUpdateLocalBtn.disabled = false;
   UI.updateStatusMessage("Firmware updated successfully");
 });
 
@@ -66,18 +78,49 @@ ipcRenderer.on("updating-db", () => {
   UI.enableProgressBar();
 });
 
-ipcRenderer.on("db-updated", () => {
+ipcRenderer.on("db-updated", (_: any, localUpdate: boolean) => {
   UI.disableProgressBar();
-  fwUpdateBtn.disabled = false;
+  localUpdate ? (dbUpdateOnlineBtn.disabled = false) : (dbUpdateLocalBtn.disabled = false);
+  fwUpdateOnlineBtn.disabled = false;
+  fwUpdateLocalBtn.disabled = false;
   UI.updateStatusMessage("ERC20 database updated successfully");
 });
 
-ipcRenderer.on("disable-db-update", () => {
-  dbUpdateBtn.disabled = true;
+ipcRenderer.on("update-error", (_: any, err: string) => {
+    UI.updateStatusMessage(err);
+    UI.disableProgressBar();
+    fwUpdateOnlineBtn.disabled = false;
+    fwUpdateLocalBtn.disabled = false;
+    dbUpdateOnlineBtn.disabled = false;
+    dbUpdateLocalBtn.disabled = false;
+})
+
+ipcRenderer.on("fw-online-update-start", () => {
+  dbUpdateOnlineBtn.disabled = true;
+  dbUpdateLocalBtn.disabled = true;
+  fwUpdateOnlineBtn.disabled = true;
+});
+
+ipcRenderer.on("fw-local-update-start", () => {
+  dbUpdateOnlineBtn.disabled = true;
+  dbUpdateLocalBtn.disabled = true;
+  fwUpdateLocalBtn.disabled = true;
+});
+
+ipcRenderer.on("db-online-update-start", () => {
+  dbUpdateLocalBtn.disabled = true;
+  fwUpdateLocalBtn.disabled = true;
+  fwUpdateOnlineBtn.disabled = true;
+});
+
+ipcRenderer.on("db-local-update-start", () => {
+  dbUpdateOnlineBtn.disabled = true;
+  fwUpdateLocalBtn.disabled = true;
+  fwUpdateOnlineBtn.disabled = true;
 });
 
 ipcRenderer.on("disable-fw-update", () => {
-  fwUpdateBtn.disabled = true;
+  fwUpdateOnlineBtn.disabled = true;
 });
 
 ipcRenderer.on("card-exceptions", function (_ : any, err: any) {
@@ -86,19 +129,29 @@ ipcRenderer.on("card-exceptions", function (_ : any, err: any) {
 });
 
 ipcRenderer.on("changelog", (_: any, data: string, fwVersion: string) => {
-  const modalWindow = window.open('', 'modal', `width=500,height=550, title=Keycard Pro | Release Notes | Version ${fwVersion}`);
+  const modalWindow = window.open('', 'modal', `width=500,height=550, title=Keycard Shell | Release Notes | Version ${fwVersion}`);
   UI.handleChangelog(modalWindow as Window, data);
 });
 
-handleUpdateProgress("chunk-loaded");
-
-fwUpdateBtn.addEventListener("click", (e) => {
+fwUpdateOnlineBtn.addEventListener("click", (e) => {
   ipcRenderer.send("update-firmware");
   e.preventDefault();
 });
 
-dbUpdateBtn.addEventListener("click", (e) => {
+fwUpdateLocalBtn.addEventListener("change",  async (e: any) => {
+   ipcRenderer.send("update-firmware", await e.target.files[0].arrayBuffer());
+   fwUpdateLocalBtn.value = "";
+   e.preventDefault();
+});
+
+dbUpdateOnlineBtn.addEventListener("click", (e) => {
   ipcRenderer.send("update-erc20");
+  e.preventDefault();
+});
+
+dbUpdateLocalBtn.addEventListener("change", async (e: any) => {
+  ipcRenderer.send("update-erc20", await e.target.files[0].arrayBuffer());
+  dbUpdateLocalBtn.value = "";
   e.preventDefault();
 });
 
@@ -111,4 +164,5 @@ document.getElementById("btn-fw-changelog")?.addEventListener("click", (e) => {
   e.preventDefault();
 });
 
+handleUpdateProgress("chunk-loaded");
 
