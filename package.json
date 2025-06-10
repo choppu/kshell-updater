@@ -1,5 +1,5 @@
 {
-  "name": "kpro-updater",
+  "name": "kshell-updater",
   "version": "1.0.0",
   "description": "Keycard Shell Updater App",
   "main": "./out/app.js",
@@ -11,7 +11,7 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "build": {
-    "appId": "com.github.choppu.kpro-updater",
+    "appId": "com.github.choppu.kshell-updater",
     "productName": "Keycard Shell Updater",
     "publish": false,
     "files": [
