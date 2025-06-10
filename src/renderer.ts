@@ -119,10 +119,6 @@ ipcRenderer.on("db-local-update-start", () => {
   fwUpdateOnlineBtn.disabled = true;
 });
 
-ipcRenderer.on("disable-fw-update", () => {
-  fwUpdateOnlineBtn.disabled = true;
-});
-
 ipcRenderer.on("card-exceptions", function (_ : any, err: any) {
   UI.updateStatusMessage(err);
   enableUpdateBtns();

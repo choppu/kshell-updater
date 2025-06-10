@@ -15,8 +15,6 @@ const folderPath = "https://shell.keycard.tech/uploads/";
 
 export class KPro {
   window: WebContents;
-  transport?: TransportNodeHidSingleton | null;
-  appEth?: Eth | null;
   firmware_context?: { fw_path: string, changelog_path: string, version: string };
   db_context?: { db_path: string, version: number }
   fw?: ArrayBuffer;
@@ -75,7 +73,6 @@ export class KPro {
 
   async updateFirmware(fw?: ArrayBuffer): Promise<void> {
     let localUpdate = false;
-
     if (fw) {
       this.fw = fw;
       this.window.send("fw-local-update-start");
@@ -87,17 +84,17 @@ export class KPro {
     this.window.send("initialize-update", this.fw?.byteLength);
 
     if (this.deviceFound) {
-      this.transport = await this.connect();
-      this.appEth = await new KProJS.Eth(this.transport);
+      let transport = await this.connect();
+      let appEth = await new KProJS.Eth(transport);
 
       try {
-        let { fwVersion } = await this.appEth.getAppConfiguration();
+        let { fwVersion } = await appEth.getAppConfiguration();
 
-        if (fwVersion == this.firmware_context?.version && !localUpdate) {
+        if ((fwVersion >= this.firmware_context!.version) && !localUpdate) {
           this.window.send("no-fw-update-needed");
         } else {
           this.window.send("updating-firmware");
-          await this.appEth.loadFirmware(this.fw as ArrayBuffer);
+          await appEth.loadFirmware(this.fw as ArrayBuffer);
           this.window.send("firmware-updated", localUpdate);
         }
       } catch (err: any) {
@@ -108,7 +105,7 @@ export class KPro {
         }
       }
 
-      this.transport.close();
+      transport.close();
     }
   }
 
@@ -126,17 +123,17 @@ export class KPro {
     this.window.send("initialize-update", this.db?.byteLength);
 
     if (this.deviceFound) {
-      this.transport = await this.connect();
-      this.appEth = await new KProJS.Eth(this.transport);
+      let transport = await this.connect();
+      let appEth = await new KProJS.Eth(transport);
 
       try {
-        let { erc20Version } = await this.appEth.getAppConfiguration();
+        let { erc20Version } = await appEth.getAppConfiguration();
 
-        if (erc20Version == this.db_context?.version) {
+        if ((erc20Version >= this.db_context!.version) && !localUpdate) {
           this.window.send("no-db-update-needed");
         } else {
           this.window.send("updating-db");
-          await this.appEth.loadERC20DB(this.db as ArrayBuffer);
+          await appEth.loadERC20DB(this.db as ArrayBuffer);
           this.window.send("db-updated", localUpdate);
         }
       } catch (err: any) {
@@ -147,7 +144,7 @@ export class KPro {
         }
       }
 
-      this.transport.close();
+      transport.close();
     }
   }
 
@@ -157,10 +154,6 @@ export class KPro {
     if (this.changelog) {
       this.window.send("changelog", md.render(this.changelog), this.firmware_context?.version);
     }
-  }
-
-  transportStopListening(): void {
-    this.transport?.off("chunk-loaded", () => { });
   }
 
   withErrorHandler(fn: (...args: any) => Promise<void>): (ev: IpcMainEvent) => void {
@@ -177,7 +170,6 @@ export class KPro {
     ipcMain.on("update-firmware", this.withErrorHandler(this.updateFirmware));
     ipcMain.on("update-erc20", this.withErrorHandler(this.updateERC20));
     ipcMain.on("show-changelog", this.getChangelog);
-    ipcMain.on("last-chunck", this.transportStopListening);
     ipcMain.on("get-changelog", this.withErrorHandler(this.getChangelog));
   }
 }

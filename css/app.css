@@ -125,6 +125,10 @@ input[type=number] {
   animation: fade 300ms;
 }
 
+.kpro__update-container {
+    display: inherit;
+}
+
 .kpro__btns-container {
   width: 100%;
   margin: 1em auto;
@@ -210,7 +214,7 @@ progress::-webkit-progress-bar {
 }
 
 progress::-webkit-progress-value {
-  background: rgb(230, 222, 75);
+  background: #FF6400;
   border-radius: 5px;
 }
 
@@ -219,7 +223,7 @@ progress::-moz-progress-bar {
 }
 
 progress::-moz-progress-value {
-  background: rgb(230, 222, 75);
+  background: #FF6400;
   border-radius: 5px;
 }
 
@@ -286,4 +290,10 @@ progress::-moz-progress-value {
 .kpro__or {
     font-weight: 600;
     font-size: .85em;
+}
+
+.kpro__usb-img-container {
+    width: 400px;
+    margin: 1em auto;
+    padding: 6em 0;
 }

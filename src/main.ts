@@ -16,7 +16,7 @@ export namespace Main {
 
   export function onReady(): void {
     mainWindow = new BrowserWindow({
-      width: 750, height: 570, minWidth: 750, minHeight: 570, maximizable: false, webPreferences: {
+      width: 650, height: 500, minWidth: 650, minHeight: 500, maximizable: false, webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
         enableRemoteModule: true,
@@ -28,7 +28,7 @@ export namespace Main {
     mainWindow.webContents.once("dom-ready", async () => {
       await kpro.start();
     });
-    mainWindow.webContents.openDevTools();
+    //mainWindow.webContents.openDevTools();
     mainWindow.on('closed', Main.onClose);
   }
 
