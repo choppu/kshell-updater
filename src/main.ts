@@ -16,9 +16,9 @@ export namespace Main {
 
   export function onReady(): void {
     mainWindow = new BrowserWindow({
-      width: 900, height: 500, 
+      width: 650, height: 500, 
       minWidth: 650, minHeight: 500, 
-      maxWidth: 900, maxHeight: 500,
+      maxWidth: 650, maxHeight: 500,
       maximizable: false, resizable: false, 
       webPreferences: {
         nodeIntegration: true,
@@ -32,7 +32,7 @@ export namespace Main {
     mainWindow.webContents.once("dom-ready", async () => {
       await kshell.start();
     });
-    mainWindow.webContents.openDevTools();
+    //mainWindow.webContents.openDevTools();
     mainWindow.on('closed', Main.onClose);
   }
 
