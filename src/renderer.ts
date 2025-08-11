@@ -6,12 +6,6 @@ const dbUpdateOnlineBtn = document.getElementById("btn-erc20-update") as HTMLBut
 const fwUpdateLocalBtn = document.getElementById("fw-upload-local") as HTMLButtonElement;
 const dbUpdateLocalBtn = document.getElementById("erc20-upload-local") as HTMLButtonElement;
 
-export function handleLog(event: string, msg: string): void {
-  ipcRenderer.on(event, (_ : any) => {
-    UI.updateStatusMessage(msg);
-  });
-}
-
 export function handleUpdateProgress(event: string) : void {
   ipcRenderer.on(event, (_ : any, progress: number) => {
     let finished = UI.handleLoadProgress(progress);
@@ -22,15 +16,10 @@ export function handleUpdateProgress(event: string) : void {
   });
 }
 
-export function enableUpdateBtns() : void {
-  fwUpdateOnlineBtn.disabled = false;
-  dbUpdateOnlineBtn.disabled = false;
-  fwUpdateLocalBtn.disabled = false;
-  dbUpdateLocalBtn.disabled = false;
-}
-
-ipcRenderer.on("kpro-connected", (_ : any, connected: boolean) => {
+ipcRenderer.on("kpro-connected", (_ : any, connected: boolean, isLatestVersions: {isFwLatest: boolean, isDBLatest: boolean}) => {
   UI.handleConnected(connected);
+  fwUpdateOnlineBtn.disabled = isLatestVersions.isFwLatest;
+  dbUpdateOnlineBtn.disabled = isLatestVersions.isDBLatest;
 });
 
 ipcRenderer.on("kpro-disconnected", (_ : any, connected: boolean) => {
@@ -42,86 +31,71 @@ ipcRenderer.on("set-version", (_: any, db_ver: number, fw_ver: string) => {
   UI.setVersion(db_ver, fw_ver);
 });
 
+ipcRenderer.on("disable-online-update", () => {
+  fwUpdateOnlineBtn.disabled = true;
+  dbUpdateOnlineBtn.disabled = true;
+  UI.setOnlineUpdateLabel();
+});
+
 ipcRenderer.on("initialize-update", (_: any, length: number) => {
   UI.initializeProgressBar(length);
 });
 
 ipcRenderer.on("no-fw-update-needed", () => {
-  dbUpdateOnlineBtn.disabled = false;
-  dbUpdateLocalBtn.disabled = false;
-  fwUpdateLocalBtn.disabled = false;
-  fwUpdateOnlineBtn.disabled = false;
-  UI.updateStatusMessage("Your firmware is up-to-date");
+  UI.updateStatusMessage("Firmware up-to-date", "success");
+  UI.enableBackBtn("Back to home");
 });
 
 ipcRenderer.on("no-db-update-needed", () => {
-  dbUpdateOnlineBtn.disabled = false;
-  dbUpdateLocalBtn.disabled = false;
-  fwUpdateLocalBtn.disabled = false;
-  fwUpdateOnlineBtn.disabled = false;
-  UI.updateStatusMessage("Your ERC20 database is up-to-date");
+  UI.updateStatusMessage("Database up-to-date", "success");
+  UI.enableBackBtn("Back to home");
 });
 
 ipcRenderer.on("updating-firmware", () => {
   UI.enableProgressBar();
 });
 
-ipcRenderer.on("firmware-updated", (_: any, localUpdate: boolean) => {
+ipcRenderer.on("firmware-updated", (_: any) => {
   UI.disableProgressBar();
-  localUpdate ? (fwUpdateOnlineBtn.disabled = false) : (fwUpdateLocalBtn.disabled = false);
-  dbUpdateOnlineBtn.disabled = false;
-  dbUpdateLocalBtn.disabled = false;
-  UI.updateStatusMessage("Firmware updated successfully");
+  UI.enableBackBtn("Back to home");
+  UI.updateStatusMessage("Successfully updated", "success");
 });
 
 ipcRenderer.on("updating-db", () => {
   UI.enableProgressBar();
 });
 
-ipcRenderer.on("db-updated", (_: any, localUpdate: boolean) => {
+ipcRenderer.on("db-updated", (_: any, isLatestDB: boolean) => {
   UI.disableProgressBar();
-  localUpdate ? (dbUpdateOnlineBtn.disabled = false) : (dbUpdateLocalBtn.disabled = false);
-  fwUpdateOnlineBtn.disabled = false;
-  fwUpdateLocalBtn.disabled = false;
-  UI.updateStatusMessage("ERC20 database updated successfully");
+  UI.enableBackBtn("Back to home");
+  UI.updateStatusMessage("Successfully updated", "success");
+  dbUpdateOnlineBtn.disabled = isLatestDB;
 });
 
 ipcRenderer.on("update-error", (_: any, err: string) => {
-    UI.updateStatusMessage(err);
+    UI.updateStatusMessage(err, "error");
+    UI.enableBackBtn("Start from beginning");
     UI.disableProgressBar();
-    fwUpdateOnlineBtn.disabled = false;
-    fwUpdateLocalBtn.disabled = false;
-    dbUpdateOnlineBtn.disabled = false;
-    dbUpdateLocalBtn.disabled = false;
-})
-
-ipcRenderer.on("fw-online-update-start", () => {
-  dbUpdateOnlineBtn.disabled = true;
-  dbUpdateLocalBtn.disabled = true;
-  fwUpdateOnlineBtn.disabled = true;
 });
 
-ipcRenderer.on("fw-local-update-start", () => {
-  dbUpdateOnlineBtn.disabled = true;
-  dbUpdateLocalBtn.disabled = true;
-  fwUpdateLocalBtn.disabled = true;
+ipcRenderer.on("fw-online-update-start", (_: any, updateVer: string, connected: boolean) => {
+  UI.showUpdateLoadingScreen("firmware", updateVer, connected);
 });
 
-ipcRenderer.on("db-online-update-start", () => {
-  dbUpdateLocalBtn.disabled = true;
-  fwUpdateLocalBtn.disabled = true;
-  fwUpdateOnlineBtn.disabled = true;
+ipcRenderer.on("fw-local-update-start", (_: any, updateVer: string, connected: boolean) => {
+  UI.showUpdateLoadingScreen("firmware", updateVer, connected);
 });
 
-ipcRenderer.on("db-local-update-start", () => {
-  dbUpdateOnlineBtn.disabled = true;
-  fwUpdateLocalBtn.disabled = true;
-  fwUpdateOnlineBtn.disabled = true;
+ipcRenderer.on("db-online-update-start", (_: any, updateVer: string, connected: boolean) => {
+  UI.showUpdateLoadingScreen("database", updateVer, connected);
+});
+
+ipcRenderer.on("db-local-update-start", (_: any, updateVer: string, connected: boolean) => {
+  UI.showUpdateLoadingScreen("database", updateVer, connected);
 });
 
 ipcRenderer.on("card-exceptions", function (_ : any, err: any) {
-  UI.updateStatusMessage(err);
-  enableUpdateBtns();
+  UI.updateStatusMessage(err, "error");
 });
 
 ipcRenderer.on("changelog", (_: any, data: string, fwVersion: string) => {

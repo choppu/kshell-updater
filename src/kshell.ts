@@ -5,18 +5,22 @@ import TransportNodeHidSingleton from "kprojs-node-hid/lib/transport-node-hid";
 import { StatusCodes } from "kprojs/lib/errors";
 import Eth from "kprojs/lib/eth";
 import fetch from 'node-fetch';
+import { Utils } from "./utils";
 
 const MarkdownIt = require('markdown-it');
 
 
-const fwContextPath = "https://shell.keycard.tech/firmware/context";
-const dbContextPath = "https://shell.keycard.tech/db/context";
+const fwContextPath = "https://shell.keycard.tech/firmware/get-firmware";
+const dbContextPath = "https://shell.keycard.tech/get-db";
 const folderPath = "https://shell.keycard.tech/uploads/";
 
-export class KPro {
+const fwVersionPosition = 652;
+const dbVersionMagic = 0x4532
+
+export class KShell {
   window: WebContents;
-  firmware_context?: { fw_path: string, changelog_path: string, version: string };
-  db_context?: { db_path: string, version: number }
+  firmware_context?: { fw_path: string, changelog_path: string, version: string } | undefined;
+  db_context?: { db_path: string, version: number } | undefined;
   fw?: ArrayBuffer;
   db?: ArrayBuffer;
   changelog?: string;
@@ -30,18 +34,24 @@ export class KPro {
 
   async start(): Promise<void> {
     try {
-      this.firmware_context = await fetch(fwContextPath).then((r: any) => r.json());
-      this.db_context = await fetch(dbContextPath).then((r: any) => r.json());
-      this.window.send("set-version", this.db_context?.version, this.firmware_context?.version);
+        this.firmware_context = await fetch(fwContextPath).then((r: any) => r.json());
+        this.db_context = await fetch(dbContextPath).then((r: any) => r.json());
+        this.window.send("set-version", this.db_context?.version, this.firmware_context?.version);
     } catch (err) {
-      throw (err)
+      this.window.send("disable-online-update");
     }
 
     KProJSNodeHID.TransportNodeHid.default.listen({
       next: async (e) => {
         if (e.type === 'add') {
           this.deviceFound = true;
-          this.window.send("kpro-connected", this.deviceFound);
+
+          let transport = await this.connect();
+          let appEth = await new KProJS.Eth(transport);
+          let { fwVersion, erc20Version } = await appEth.getAppConfiguration();
+          let isLatestVersions = Utils.checkLatestVersion(Utils.parseFirmwareVersion(fwVersion), erc20Version, this.firmware_context, this.db_context);  
+          this.window.send("kpro-connected", this.deviceFound, isLatestVersions);
+          transport.close();
         } else if (e.type === 'remove') {
           this.deviceFound = false;
           this.window.send("kpro-disconnected", this.deviceFound);
@@ -75,11 +85,13 @@ export class KPro {
     let localUpdate = false;
     if (fw) {
       this.fw = fw;
-      this.window.send("fw-local-update-start");
+      let fwVersionBuff = Buffer.from(fw.slice(fwVersionPosition, fwVersionPosition + 3));
+      let fwVersion = `${fwVersionBuff[0]}.${fwVersionBuff[1]}.${fwVersionBuff[2]}`;
+      this.window.send("fw-local-update-start", fwVersion, this.deviceFound);
       localUpdate = true;
     } else {
       this.fw = await fetch(folderPath + this.firmware_context?.fw_path).then((r: any) => r.arrayBuffer());
-      this.window.send("fw-online-update-start");
+      this.window.send("fw-online-update-start", this.firmware_context?.version, this.deviceFound);
     }
     this.window.send("initialize-update", this.fw?.byteLength);
 
@@ -89,19 +101,19 @@ export class KPro {
 
       try {
         let { fwVersion } = await appEth.getAppConfiguration();
-
-        if ((fwVersion >= this.firmware_context!.version) && !localUpdate) {
+        
+        if (this.firmware_context && (Utils.parseFirmwareVersion(fwVersion) >= Utils.parseFirmwareVersion(this.firmware_context!.version)) && !localUpdate) {
           this.window.send("no-fw-update-needed");
         } else {
           this.window.send("updating-firmware");
           await appEth.loadFirmware(this.fw as ArrayBuffer);
-          this.window.send("firmware-updated", localUpdate);
+          this.window.send("firmware-updated");
         }
       } catch (err: any) {
         if (err.statusCode == StatusCodes.SECURITY_STATUS_NOT_SATISFIED) {
           this.window.send("update-error", "Firmware update canceled by user");
         } else {
-          this.window.send("update-error", "Error: Invalid data. Failed to update firmware");
+          this.window.send("update-error", "Invalid data. Update failed.");
         }
       }
 
@@ -111,13 +123,21 @@ export class KPro {
 
   async updateERC20(db?: ArrayBuffer): Promise<void> {
     let localUpdate = false;
+    
     if (db) {
       this.db = db;
-      this.window.send("db-local-update-start");
+      let dbVMagic = Buffer.from(db.slice(0, 2)).readUInt16LE();
+      let dbVersion = (dbVMagic != dbVersionMagic) ? '' : `${Buffer.from(db.slice(4, 8)).readUInt32LE().toString()}`;
+      this.window.send("db-local-update-start", dbVersion, this.deviceFound);
       localUpdate = true;
+
+      if(dbVMagic != dbVersionMagic) {
+        this.window.send("update-error", "Invalid database file");
+        return;
+      }
     } else {
       this.db = await fetch(folderPath + this.db_context?.db_path).then((r: any) => r.arrayBuffer());
-      this.window.send("db-online-update-start");
+      this.window.send("db-online-update-start", this.db_context?.version, this.deviceFound);
     }
 
     this.window.send("initialize-update", this.db?.byteLength);
@@ -129,18 +149,19 @@ export class KPro {
       try {
         let { erc20Version } = await appEth.getAppConfiguration();
 
-        if ((erc20Version >= this.db_context!.version) && !localUpdate) {
+        if (this.db_context && (erc20Version >= this.db_context!.version) && !localUpdate) {
           this.window.send("no-db-update-needed");
         } else {
           this.window.send("updating-db");
           await appEth.loadERC20DB(this.db as ArrayBuffer);
-          this.window.send("db-updated", localUpdate);
+          let { erc20Version } = await appEth.getAppConfiguration();
+          this.window.send("db-updated", erc20Version == this.db_context!.version);
         }
       } catch (err: any) {
         if (err.statusCode == StatusCodes.SECURITY_STATUS_NOT_SATISFIED) {
           this.window.send("update-error", "ERC20 database update canceled by user");
         } else {
-          this.window.send("update-error", "Error: Invalid data. Failed to update the ERC20 database");
+          this.window.send("update-error", "Invalid data. Failed to update the database");
         }
       }
 

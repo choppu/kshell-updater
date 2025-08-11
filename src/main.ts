@@ -1,10 +1,10 @@
-import { KPro } from "./kpro"
+import { KShell } from "./kshell"
 
 export namespace Main {
   let mainWindow: Electron.BrowserWindow;
   let application: Electron.App;
   let BrowserWindow: any;
-  let kpro: KPro;
+  let kshell: KShell;
 
   export function onWindowAllClosed() {
     application.quit();
@@ -16,7 +16,11 @@ export namespace Main {
 
   export function onReady(): void {
     mainWindow = new BrowserWindow({
-      width: 650, height: 500, minWidth: 650, minHeight: 500, maximizable: false, webPreferences: {
+      width: 650, height: 500, 
+      minWidth: 650, minHeight: 500, 
+      maxWidth: 650, maxHeight: 500,
+      maximizable: false, resizable: false, 
+      webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
         enableRemoteModule: true,
@@ -24,9 +28,9 @@ export namespace Main {
     });
     mainWindow.removeMenu();
     mainWindow.loadFile(`${__dirname}/../index.html`);
-    kpro = new KPro(mainWindow.webContents);
+    kshell = new KShell(mainWindow.webContents);
     mainWindow.webContents.once("dom-ready", async () => {
-      await kpro.start();
+      await kshell.start();
     });
     //mainWindow.webContents.openDevTools();
     mainWindow.on('closed', Main.onClose);
