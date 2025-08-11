@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { shell } = require('electron');
 
 export namespace UI {
   const connectDeviceContainer = document.getElementById("kshell-connect") as HTMLDivElement;
@@ -15,6 +16,8 @@ export namespace UI {
   const hideElementClass = "keycard_shell__display-none";
   const backBtn = document.getElementById("btn-back") as HTMLButtonElement;
   const errIcon = document.getElementById("error-image");
+
+  const releaseNotesBtn = document.getElementById("btn-fw-changelog") as HTMLAnchorElement;
   
   const messageColor = '#FF6400';
   const successColor = '#FFFFFFF2';
@@ -107,7 +110,8 @@ export namespace UI {
   }
 
   export function handleConnected(connected: boolean) : void {
-    if(connected) {
+    if(connected) { 
+      handleChangelog();   
       updateContainer.classList.remove(hideElementClass);
       connectDeviceContainer?.classList.add(hideElementClass);
     } else {
@@ -117,8 +121,10 @@ export namespace UI {
     }
   }
 
-  export function handleChangelog(win: Window, data: string) {
-    win.document.write(data);
-    win.document.write('<link rel="stylesheet" type="text/css" href="css/modal.css">');
+  export function handleChangelog() : void {
+    releaseNotesBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        shell.openExternal('https://shell.keycard.tech/firmware/release-notes');
+    })
   }
 }

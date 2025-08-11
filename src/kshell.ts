@@ -19,11 +19,10 @@ const dbVersionMagic = 0x4532
 
 export class KShell {
   window: WebContents;
-  firmware_context?: { fw_path: string, changelog_path: string, version: string } | undefined;
+  firmware_context?: { fw_path: string, hash: string, version: string } | undefined;
   db_context?: { db_path: string, version: number } | undefined;
   fw?: ArrayBuffer;
   db?: ArrayBuffer;
-  changelog?: string;
   deviceFound: boolean;
 
   constructor(window: WebContents) {
@@ -159,21 +158,13 @@ export class KShell {
         }
       } catch (err: any) {
         if (err.statusCode == StatusCodes.SECURITY_STATUS_NOT_SATISFIED) {
-          this.window.send("update-error", "ERC20 database update canceled by user");
+          this.window.send("update-error", "Database update canceled by user");
         } else {
           this.window.send("update-error", "Invalid data. Failed to update the database");
         }
       }
 
       transport.close();
-    }
-  }
-
-  async getChangelog(): Promise<void> {
-    let md = new MarkdownIt();
-    this.changelog = await fetch(folderPath + this.firmware_context?.changelog_path).then((r: any) => r.text());
-    if (this.changelog) {
-      this.window.send("changelog", md.render(this.changelog), this.firmware_context?.version);
     }
   }
 
@@ -190,7 +181,5 @@ export class KShell {
   installEventHandlers(): void {
     ipcMain.on("update-firmware", this.withErrorHandler(this.updateFirmware));
     ipcMain.on("update-erc20", this.withErrorHandler(this.updateERC20));
-    ipcMain.on("show-changelog", this.getChangelog);
-    ipcMain.on("get-changelog", this.withErrorHandler(this.getChangelog));
   }
 }

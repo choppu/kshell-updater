@@ -98,11 +98,6 @@ ipcRenderer.on("card-exceptions", function (_ : any, err: any) {
   UI.updateStatusMessage(err, "error");
 });
 
-ipcRenderer.on("changelog", (_: any, data: string, fwVersion: string) => {
-  const modalWindow = window.open('', 'modal', `width=500,height=550, title=Keycard Shell | Release Notes | Version ${fwVersion}`);
-  UI.handleChangelog(modalWindow as Window, data);
-});
-
 fwUpdateOnlineBtn.addEventListener("click", (e) => {
   ipcRenderer.send("update-firmware");
   e.preventDefault();
@@ -127,11 +122,6 @@ dbUpdateLocalBtn.addEventListener("change", async (e: any) => {
 
 document.getElementById("kpro-message-close")?.addEventListener("click", (e) => {
   UI.hideStatusMessage();
-});
-
-document.getElementById("btn-fw-changelog")?.addEventListener("click", (e) => {
-  ipcRenderer.send("get-changelog");
-  e.preventDefault();
 });
 
 handleUpdateProgress("chunk-loaded");
