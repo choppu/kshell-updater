@@ -1,9 +1,9 @@
 import { IpcMainEvent, WebContents, ipcMain } from "electron";
-import KProJS from "kprojs";
-import KProJSNodeHID from "kprojs-node-hid";
-import TransportNodeHidSingleton from "kprojs-node-hid/lib/transport-node-hid";
-import { StatusCodes } from "kprojs/lib/errors";
-import Eth from "kprojs/lib/eth";
+import ShellJS from "shelljs";
+import ShellJSNodeHID from "shelljs-node-hid";
+import TransportNodeHidSingleton from "shelljs-node-hid/lib/transport-node-hid";
+import { StatusCodes } from "shelljs/lib/errors";
+import Eth from "shelljs/lib/eth";
 import fetch from 'node-fetch';
 import { Utils } from "./utils";
 
@@ -40,24 +40,24 @@ export class KShell {
       this.window.send("disable-online-update");
     }
 
-    KProJSNodeHID.TransportNodeHid.default.listen({
+    ShellJSNodeHID.TransportNodeHid.default.listen({
       next: async (e) => {
         if (e.type === 'add') {
           this.deviceFound = true;
 
           let transport = await this.connect();
-          let appEth = await new KProJS.Eth(transport);
+          let appEth = await new ShellJS.Eth(transport);
           let { fwVersion, erc20Version } = await appEth.getAppConfiguration();
           let isLatestVersions = Utils.checkLatestVersion(Utils.parseFirmwareVersion(fwVersion), erc20Version, this.firmware_context, this.db_context);  
-          this.window.send("kpro-connected", this.deviceFound, isLatestVersions);
+          this.window.send("shell-connected", this.deviceFound, isLatestVersions);
           transport.close();
         } else if (e.type === 'remove') {
           this.deviceFound = false;
-          this.window.send("kpro-disconnected", this.deviceFound);
+          this.window.send("shell-disconnected", this.deviceFound);
         }
       },
       error: (error) => {
-        if (error instanceof KProJS.KProError.TransportOpenUserCancelled) {
+        if (error instanceof ShellJS.ShellError.TransportOpenUserCancelled) {
           throw ("Error connecting to device. Connect Keycard Shell");
         } else {
           throw ("Error");
@@ -68,7 +68,7 @@ export class KShell {
   }
 
   async connect(): Promise<TransportNodeHidSingleton> {
-    return KProJSNodeHID.TransportNodeHid.default.open()
+    return ShellJSNodeHID.TransportNodeHid.default.open()
       .then(transport => {
         transport.on("chunk-loaded", (progress: any) => {
           this.window.send("chunk-loaded", progress);
@@ -96,7 +96,7 @@ export class KShell {
 
     if (this.deviceFound) {
       let transport = await this.connect();
-      let appEth = await new KProJS.Eth(transport);
+      let appEth = await new ShellJS.Eth(transport);
 
       try {
         let { fwVersion } = await appEth.getAppConfiguration();
@@ -143,7 +143,7 @@ export class KShell {
 
     if (this.deviceFound) {
       let transport = await this.connect();
-      let appEth = await new KProJS.Eth(transport);
+      let appEth = await new ShellJS.Eth(transport);
 
       try {
         let { erc20Version } = await appEth.getAppConfiguration();

@@ -28,8 +28,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "kprojs": "github:choppu/kprojs",
-    "kprojs-node-hid": "github:choppu/kprojs-node-hid",
+    "shelljs": "github:choppu/shelljs",
+    "shelljs-node-hid": "github:choppu/shelljs-node-hid",
     "markdown-it": "^14.1.0",
     "node-fetch": "^3.3.2",
     "typescript": "^5.8.3"

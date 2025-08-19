@@ -6,8 +6,8 @@ export namespace UI {
   const updateContainer = document.getElementById("keycard_shell__update-container") as HTMLDivElement;
   const progressBar = document.getElementById("progress-bar-container") as HTMLDivElement;
   const progressLoad = document.getElementById("progress-bar") as HTMLProgressElement;
-  const messContainer = document.getElementById("kpro-message-field") as HTMLDivElement;
-  const message = document.getElementById('kpro-message') as HTMLElement;
+  const messContainer = document.getElementById("shell-message-field") as HTMLDivElement;
+  const message = document.getElementById('shell-message') as HTMLElement;
   const dbVersion = document.getElementById('db-version-label') as HTMLSpanElement;
   const fwVersion = document.getElementById('fw-version-label') as HTMLSpanElement;
   const updateProgressContainer = document.getElementById("update-progress") as HTMLDivElement;

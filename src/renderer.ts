@@ -16,13 +16,13 @@ export function handleUpdateProgress(event: string) : void {
   });
 }
 
-ipcRenderer.on("kpro-connected", (_ : any, connected: boolean, isLatestVersions: {isFwLatest: boolean, isDBLatest: boolean}) => {
+ipcRenderer.on("shell-connected", (_ : any, connected: boolean, isLatestVersions: {isFwLatest: boolean, isDBLatest: boolean}) => {
   UI.handleConnected(connected);
   fwUpdateOnlineBtn.disabled = isLatestVersions.isFwLatest;
   dbUpdateOnlineBtn.disabled = isLatestVersions.isDBLatest;
 });
 
-ipcRenderer.on("kpro-disconnected", (_ : any, connected: boolean) => {
+ipcRenderer.on("shell-disconnected", (_ : any, connected: boolean) => {
   UI.handleConnected(connected);
   UI.disableProgressBar();
 });
@@ -120,7 +120,7 @@ dbUpdateLocalBtn.addEventListener("change", async (e: any) => {
   e.preventDefault();
 });
 
-document.getElementById("kpro-message-close")?.addEventListener("click", (e) => {
+document.getElementById("shell-message-close")?.addEventListener("click", (e) => {
   UI.hideStatusMessage();
 });
 
