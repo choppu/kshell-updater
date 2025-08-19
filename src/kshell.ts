@@ -3,12 +3,8 @@ import ShellJS from "shelljs";
 import ShellJSNodeHID from "shelljs-node-hid";
 import TransportNodeHidSingleton from "shelljs-node-hid/lib/transport-node-hid";
 import { StatusCodes } from "shelljs/lib/errors";
-import Eth from "shelljs/lib/eth";
 import fetch from 'node-fetch';
 import { Utils } from "./utils";
-
-const MarkdownIt = require('markdown-it');
-
 
 const fwContextPath = "https://shell.keycard.tech/firmware/get-firmware";
 const dbContextPath = "https://shell.keycard.tech/get-db";
@@ -46,9 +42,9 @@ export class KShell {
           this.deviceFound = true;
 
           let transport = await this.connect();
-          let appEth = await new ShellJS.Eth(transport);
-          let { fwVersion, erc20Version } = await appEth.getAppConfiguration();
-          let isLatestVersions = Utils.checkLatestVersion(Utils.parseFirmwareVersion(fwVersion), erc20Version, this.firmware_context, this.db_context);  
+          let appEth = await new ShellJS.Commands(transport);
+          let { fwVersion, dbVersion } = await appEth.getAppConfiguration();
+          let isLatestVersions = Utils.checkLatestVersion(Utils.parseFirmwareVersion(fwVersion), dbVersion, this.firmware_context, this.db_context);  
           this.window.send("shell-connected", this.deviceFound, isLatestVersions);
           transport.close();
         } else if (e.type === 'remove') {
@@ -96,7 +92,7 @@ export class KShell {
 
     if (this.deviceFound) {
       let transport = await this.connect();
-      let appEth = await new ShellJS.Eth(transport);
+      let appEth = await new ShellJS.Commands(transport);
 
       try {
         let { fwVersion } = await appEth.getAppConfiguration();
@@ -143,18 +139,18 @@ export class KShell {
 
     if (this.deviceFound) {
       let transport = await this.connect();
-      let appEth = await new ShellJS.Eth(transport);
+      let appEth = await new ShellJS.Commands(transport);
 
       try {
-        let { erc20Version } = await appEth.getAppConfiguration();
+        let { dbVersion } = await appEth.getAppConfiguration();
 
-        if (this.db_context && (erc20Version >= this.db_context!.version) && !localUpdate) {
+        if (this.db_context && (dbVersion >= this.db_context!.version) && !localUpdate) {
           this.window.send("no-db-update-needed");
         } else {
           this.window.send("updating-db");
-          await appEth.loadERC20DB(this.db as ArrayBuffer);
-          let { erc20Version } = await appEth.getAppConfiguration();
-          this.window.send("db-updated", erc20Version == this.db_context!.version);
+          await appEth.loadDatabase(this.db as ArrayBuffer);
+          let { dbVersion } = await appEth.getAppConfiguration();
+          this.window.send("db-updated", dbVersion == this.db_context!.version);
         }
       } catch (err: any) {
         if (err.statusCode == StatusCodes.SECURITY_STATUS_NOT_SATISFIED) {
