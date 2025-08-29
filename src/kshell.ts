@@ -1,8 +1,8 @@
 import { IpcMainEvent, WebContents, ipcMain } from "electron";
-import ShellJS from "shelljs";
-import ShellJSNodeHID from "shelljs-node-hid";
-import TransportNodeHidSingleton from "shelljs-node-hid/lib/transport-node-hid";
-import { StatusCodes } from "shelljs/lib/errors";
+import ShellJS from "@choppu/shelljs";
+import ShellJSNodeHID from "@choppu/shelljs-node-hid";
+import TransportNodeHidSingleton from "@choppu/shelljs-node-hid/lib/transport-node-hid";
+import { StatusCodes } from "@choppu/shelljs/lib/errors";
 import fetch from 'node-fetch';
 import { Utils } from "./utils";
 
