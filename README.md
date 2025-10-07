@@ -1,6 +1,6 @@
 # Keycard Shell Updater
 
-Keycard Shell Updater is an application to update Keycard Shell firmware and ERC20 database. Here are some screenshots of its functionality.
+Keycard Shell Updater is an application to update Keycard Shell firmware and database. Here are some screenshots of its functionality.
 
 ![alt text](https://github.com/user-attachments/assets/dad248a9-819b-42e5-af45-59d12fd1a497 "Keycard Shell 1")
 ![alt text](https://github.com/user-attachments/assets/0c6b27cb-25c6-4fb0-b179-f022db05c95e "Keycard Shell 2")
@@ -14,7 +14,7 @@ Compile Keycard Shell Updater for your computer from the command line using `npm
 
 ## Functionality
 
-- Update ERC20 locally
-- Update ERC20 online
+- Update database locally
+- Update database online
 - Update firmware locally
 - Update firmware online
