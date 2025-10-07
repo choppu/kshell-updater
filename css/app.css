@@ -194,6 +194,10 @@ input[type=number] {
     gap: 8px;
 }
 
+.keycard_shell__shell-connected-img {
+    width: 247px;
+}
+
 .keycard_shell__heading-container {
     display: flex;
     flex-direction: column;

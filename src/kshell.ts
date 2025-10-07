@@ -7,7 +7,7 @@ import fetch from 'node-fetch';
 import { Utils } from "./utils";
 
 const fwContextPath = "https://shell.keycard.tech/firmware/get-firmware";
-const dbContextPath = "https://shell.keycard.tech/get-db";
+const dbContextPath = "https://shell.keycard.tech/update/get-db";
 const folderPath = "https://shell.keycard.tech/uploads/";
 
 const fwVersionPosition = 652;
